@@ -36,8 +36,8 @@ extern int yylex();
 /* Gramática */
 %%
 function_declaration :
-        FUNCTION IDENTIFIER LPARENTHESIS parameters_declaration RPARENTHESIS LBRACES statement RBRACES
-        | FUNCTION IDENTIFIER LPARENTHESIS RPARENTHESIS LBRACES statement RBRACES
+        FUNCTION id LPARENTHESIS parameters_declaration RPARENTHESIS LBRACES statement RBRACES
+        | FUNCTION id LPARENTHESIS RPARENTHESIS LBRACES statement RBRACES
         ;
 
 parameters_declaration :
@@ -46,7 +46,7 @@ parameters_declaration :
         ;
 
 parameter_declaration :
-        VAR IDENTIFIER
+        VAR id
         ;
 
 parameter_list_declaration :
@@ -54,14 +54,14 @@ parameter_list_declaration :
         | parameter_declaration ',' parameter_declaration ',' parameter_declaration            
 
 function_call :
-        FUNCTION IDENTIFIER LPARENTHESIS parameters_call RPARENTHESIS ';'
-        | FUNCTION IDENTIFIER LPARENTHESIS RPARENTHESIS ';'
+        FUNCTION id LPARENTHESIS parameters_call RPARENTHESIS ';'
+        | FUNCTION id LPARENTHESIS RPARENTHESIS ';'
         ;
 
 parameters_call:
-        IDENTIFIER
-        | IDENTIFIER ',' IDENTIFIER
-        | IDENTIFIER ',' IDENTIFIER ',' IDENTIFIER
+        id
+        | id ',' id
+        | id ',' id ',' id
         ; 
 
 statement :
@@ -77,8 +77,8 @@ statement :
         ;       
 
 variable_declaration :
-        VAR IDENTIFIER ':' I64 '=' expression ';'
-        | VAR IDENTIFIER ':' F64 '=' expression ';'
+        VAR id ':' I64 '=' expression ';'
+        | VAR id ':' F64 '=' expression ';'
         ;
 
 number :
@@ -100,15 +100,15 @@ expression :
         ;
 
 assignment : 
-       IDENTIFIER IS expression ';'   { $$ = $3 }
+       id IS expression ';'   { $$ = $3 }
        ;
 
 increment :
-        IDENTIFIER INCREMENT ';'   { $$ = $1 + 1; }
+        id INCREMENT ';'   { $$ = $1 + 1; }
         ;
 
 decrement :
-        IDENTIFIER DECREMENT ';'   { $$ = $1 - 1; }
+        id DECREMENT ';'   { $$ = $1 - 1; }
         ;
 
 return_statement :
