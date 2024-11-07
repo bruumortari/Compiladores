@@ -25,8 +25,8 @@ extern int yylex();
         char* s;
 }
 
-%token <d> I64
-%token <f> F64
+%token <d> INTEGER
+%token <f> FLOAT
 %token <s> IDENTIFIER
 %token FUNCTION VAR LBRACES RBRACES LPARENTHESIS RPARENTHESIS
 %token IF ELSE WHILE RETURN
@@ -35,55 +35,54 @@ extern int yylex();
 
 /* Gramática */
 %%
-function_declaration :
-        FUNCTION id LPARENTHESIS parameters_declaration RPARENTHESIS LBRACES statement RBRACES
-        | FUNCTION id LPARENTHESIS RPARENTHESIS LBRACES statement RBRACES
+
+function :
+       function_start LPARENTHESIS parameters RPARENTHESIS LBRACES statements RBRACES end
+       ;
+
+function_start :
+        FUNCTION id /* Para declarar a função */
+        | id        /* Para chamar a função */
         ;
 
-parameters_declaration :
-        parameter_declaration
-        | parameter_list_declaration
+parameters :
+        ε            /* Função sem parâmetros */     
+        | id type
+        | id type ',' id type
+        | id type ',' id type ',' id type
         ;
 
-parameter_declaration :
-        VAR id
-        ;
+type :
+        ε
+        | 'i64'
+        | 'f64'
+        ;        
 
-parameter_list_declaration :
-        parameter_declaration ',' parameter_declaration
-        | parameter_declaration ',' parameter_declaration ',' parameter_declaration            
+end :
+        ε           /* Criação de função */
+        | ';'       /* Chamada de função */
+        ;        
 
-function_call :
-        FUNCTION id LPARENTHESIS parameters_call RPARENTHESIS ';'
-        | FUNCTION id LPARENTHESIS RPARENTHESIS ';'
-        ;
-
-parameters_call:
-        id
-        | id ',' id
-        | id ',' id ',' id
-        ; 
-
-statement :
+statements :
         variable_declaration
         | expression
         | assignment
         | increment
         | decrement
         | return_statement
-        | function_call
+        | function
         | if_statement
         | loop
         ;       
 
 variable_declaration :
-        VAR id ':' I64 '=' expression ';'
-        | VAR id ':' F64 '=' expression ';'
+        VAR id ':' 'i64' '=' expression ';'
+        | VAR id ':' 'f64' '=' expression ';'
         ;
 
 number :
-        I64
-        | F64
+        INTEGER
+        | FLOAT
         ;
 
 id : 

@@ -46,12 +46,14 @@
 "!="                   { return DIFFERENT; }
 ";"                    { return ';'; }
 ","                    { return ','; }
+"i64"                  { return 'i64'; } 
+"f64"                  { return 'f64'; }
 "++"                   { return INCREMENT; }
 "--"                   { return DECREMENT; } 
 "!"                    { return NOT; } /* Expressao unária com o operador '!' */
 [a-z_][a-zA-Z0-9_]*    { yylval.s = strdup(yytext); return IDENTIFIER;} 
-[0-9]+                 { yylval.d = atoi(yytext); return I64; }
-[+-]?[0-9]+(\.[0-9]+)  { yylval.f = atof(yytext); return F64; }
+[0-9]+                 { yylval.d = atoi(yytext); return INTEGER; }
+[+-]?[0-9]+(\.[0-9]+)  { yylval.f = atof(yytext); return FLOAT; }
 [ \n\t\r]              {  } /* Ignora */
 "//".*                 {  } /* Ignora comentarios */
 "/*"[a-zA-Z0-9\n\t\r_"*"]*"*/"   {  } /* Ignora comentários */
