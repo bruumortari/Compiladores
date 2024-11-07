@@ -91,29 +91,28 @@ id :
         ;        
               
 expression :
-        number
-        | number '+' number ';'
-        | number '-' number ';'
-        | number '*' number ';'
-        | number '/' number ';'
-        | number '%' number ';'
+        number                    { $$ = $1; }
+        | number '+' number ';'   { $$ = $1 + $3; }
+        | number '-' number ';'   { $$ = $1 - $3; }
+        | number '*' number ';'   { $$ = $1 * $3; }
+        | number '/' number ';'   { $$ = $1 / $3; }
+        | number '%' number ';'   { $$ = $1 % $3; }
         ;
 
 assignment : 
-       IDENTIFIER IS expression ';'
+       IDENTIFIER IS expression ';'   { $$ = $3 }
        ;
 
 increment :
-        IDENTIFIER INCREMENT ';'
+        IDENTIFIER INCREMENT ';'   { $$ = $1 + 1; }
         ;
 
 decrement :
-        IDENTIFIER DECREMENT ';'
+        IDENTIFIER DECREMENT ';'   { $$ = $1 - 1; }
         ;
 
 return_statement :
-        RETURN number
-        | RETURN expression
+        RETURN number    { printf("Return: %d\n", $2); }
         ;
 
 if_statement : 
