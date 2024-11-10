@@ -23,117 +23,133 @@ extern int yylex();
         int d;
         double f;
         char* s;
+        char* type;
 }
 
 %token <d> INTEGER
 %token <f> FLOAT
 %token <s> IDENTIFIER
+%token <type> I64 F64
 %token FUNCTION VAR LBRACES RBRACES LPARENTHESIS RPARENTHESIS
 %token IF ELSE WHILE RETURN
 %token PLUS MINUS MULTI DIV REST GREATHERTHAN LESSTHAN EQL EQG IS DIFF AND OR EQ DIFFERENT INCREMENT DECREMENT NOT
-%token ';' ','
+%token SEMICOLLON COMMA COLON
 
 /* Gramática */
 %%
 
+program : function_list FUNCTION MAIN LPARENTHESIS RPARENTHESIS LBRACE variable_declaration_list statements_list RBRACE
+
 function :
-       function_start LPARENTHESIS parameters RPARENTHESIS LBRACES statements RBRACES end
-       ;
+        FUNCTION id LPARENTHESIS parameters_list RPARENTHESIS LBRACES variable_declaration_list statements_list RBRACES
+   	;
 
-function_start :
-        FUNCTION id /* Para declarar a função */
-        | id        /* Para chamar a função */
-        ;
-
-parameters :
-        ε            /* Função sem parâmetros */     
-        | id type
-        | id type ',' id type
-        | id type ',' id type ',' id type
-        ;
-
-type :
+function_list : 
         ε
-        | 'i64'
-        | 'f64'
-        ;        
-
-end :
-        ε           /* Criação de função */
-        | ';'       /* Chamada de função */
-        ;        
-
-statements :
-        variable_declaration
-        | expression
-        | assignment
-        | increment
-        | decrement
-        | return_statement
-        | function
-        | if_statement
-        | loop
-        ;       
-
-variable_declaration :
-        VAR id ':' 'i64' '=' expression ';'
-        | VAR id ':' 'f64' '=' expression ';'
+        | function_list function
         ;
 
-number :
-        INTEGER
-        | FLOAT
+function_call :
+        id LPARENTHESIS parameters_list RPARENTHESIS SEMICOLLON
+
+parameter :    
+        ε
+        | parameter id type COMMA
+        ;
+
+final_parameter:
+        id type
+        ;
+
+parameters_list:
+        ε
+        | parameter final_parameter
         ;
 
 id : 
         IDENTIFIER
-        ;        
-              
+        ; 
+
+type :
+        I64
+        | F64
+        ;    
+
+number :
+        INTEGER
+        | FLOAT
+        ;               
+
+variable_declaration :
+        VAR id COLON type IS expression SEMICOLLON
+        | VAR id COLON type IS expression SEMICOLLON
+        ;    
+
+variable_declaration_list :
+        ε
+        | variable_declaration_list variable_declaration
+
+statements :
+        assignment 
+        | increment 
+        | decrement 
+        | if_statement 
+        | loop 
+        | function_call
+        | return_statement
+        ; 
+
+statements_list :
+        ε
+        | statements_list statement 
+
 expression :
-        number                    { $$ = $1; }
-        | number '+' number ';'   { $$ = $1 + $3; }
-        | number '-' number ';'   { $$ = $1 - $3; }
-        | number '*' number ';'   { $$ = $1 * $3; }
-        | number '/' number ';'   { $$ = $1 / $3; }
-        | number '%' number ';'   { $$ = $1 % $3; }
+        number                                  { $$ = $1; }
+        | id                                    { $$ = $1; }
+        | number PLUS number                    { $$ = $1 + $3; }
+        | number MINUS number                   { $$ = $1 - $3; }
+        | number MULTI number                   { $$ = $1 * $3; }
+        | number DIV number                     { $$ = $1 / $3; }
+        | number REST number                    { $$ = $1 % $3; }
+        | LPARENTHESIS expression RPARENTHESIS  { $$ = $2; }
         ;
 
-assignment : 
-       id IS expression ';'   { $$ = $3 }
-       ;
-
-increment :
-        id INCREMENT ';'   { $$ = $1 + 1; }
-        ;
-
-decrement :
-        id DECREMENT ';'   { $$ = $1 - 1; }
-        ;
-
-return_statement :
-        RETURN number    { printf("Return: %d\n", $2); }
-        ;
-
-if_statement : 
-        IF LPARENTHESIS comparison RPARENTHESIS LBRACES statement RBRACES
-        | IF LPARENTHESIS NOT comparison RPARENTHESIS LBRACES statement RBRACES
-        | IF LPARENTHESIS comparison RPARENTHESIS LBRACES statement RBRACES ELSE LBRACES statement RBRACES
-        | IF LPARENTHESIS NOT comparison RPARENTHESIS LBRACES statement RBRACES ELSE LBRACES statement RBRACES
-        ;
-
-comparison : 
+bool_expression : /* alterei o nome: comparision */
         expression EQ expression
         | expression GREATERTHAN expression
         | expression EQG expression
         | expression LESSTHAN expression
         | expression EQL expression
         | expression DIFF expression
-        | comparison AND comparison
-        | comparison OR comparison
+        | bool_expression AND bool_expression
+        | bool_expression OR bool_expression
+        | NOT bool_expression
+        ;
+
+assignment : 
+       id IS expression SEMICOLLON              { $$ = $3 }
+       | id IS function_call SEMICOLLON         { $$ = $3 }
+       ;
+
+increment :
+        id INCREMENT SEMICOLLON   { $$ = $1 + 1; }
+        ;
+
+decrement :
+        id DECREMENT SEMICOLLON   { $$ = $1 - 1; }
+        ;
+
+return_statement :
+        RETURN number SEMICOLLON   { printf("Return: %d\n", $2); }
+        ;
+
+if_statement : 
+        IF LPARENTHESIS bool_expression RPARENTHESIS LBRACES statements_list RBRACES
+        | IF LPARENTHESIS bool_expression RPARENTHESIS LBRACES statements_list RBRACES ELSE LBRACES statements_list RBRACES
         ;
 
 loop :
-        WHILE LPARENTHESIS comparison RPARENTHESIS LBRACES statement RBRACES
+        WHILE LPARENTHESIS bool_expression RPARENTHESIS LBRACES statements_list RBRACES
         ;  
 
 %%
