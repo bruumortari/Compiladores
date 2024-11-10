@@ -18,11 +18,11 @@
         varName[len - 4] = '\0'; // Finaliza a string
         return varName;
     }
-}%
+%}
 
 %%
 "fn"                   { return FUNCTION; }
-"main"                  { return MAIN; }
+"main"                 { return MAIN; }
 "var"                  { return VAR; }
 "{"                    { return LBRACES; }
 "}"                    { return RBRACES; }

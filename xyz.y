@@ -28,12 +28,25 @@ extern int yylex();
 
 %token <d> INTEGER
 %token <f> FLOAT
-%token <s> IDENTIFIER
+%token <d> IDENTIFIER
 %token <type> I64 F64
-%token FUNCTION VAR LBRACES RBRACES LPARENTHESIS RPARENTHESIS
+%token FUNCTION MAIN VAR LBRACE RBRACE LPARENTHESIS RPARENTHESIS
 %token IF ELSE WHILE RETURN
-%token PLUS MINUS MULTI DIV REST GREATHERTHAN LESSTHAN EQL EQG IS DIFF AND OR EQ DIFFERENT INCREMENT DECREMENT NOT
-%token SEMICOLLON COMMA COLON
+%token PLUS MINUS MULTI DIV REST GREATERTHAN LESSTHAN EQL EQG IS DIFF AND OR EQ DIFFERENT INCREMENT DECREMENT NOT
+%token SEMICOLON COMMA COLON
+
+%type <d> integer_number assignment increment decrement return_statement function_call id
+%type <f> float_number expression
+
+/* Lista de precedência */
+%right INCREMENT DECREMENT
+%right NOT
+%left MULTI DIV REST
+%left PLUS MINUS
+%nonassoc GREATERTHAN LESSTHAN EQL EQG DIFF
+%nonassoc EQ DIFFERENT
+%right IS
+%left AND OR
 
 /* Gramática */
 %%
@@ -41,19 +54,22 @@ extern int yylex();
 program : function_list FUNCTION MAIN LPARENTHESIS RPARENTHESIS LBRACE variable_declaration_list statements_list RBRACE
 
 function :
-        FUNCTION id LPARENTHESIS parameters_list RPARENTHESIS LBRACES variable_declaration_list statements_list RBRACES
+        FUNCTION id LPARENTHESIS parameters_list RPARENTHESIS LBRACE variable_declaration_list statements_list RBRACE
    	;
 
+epsilon :
+        ;        
+
 function_list : 
-        ε
+        epsilon
         | function_list function
         ;
 
 function_call :
-        id LPARENTHESIS parameters_list RPARENTHESIS SEMICOLLON
+        id LPARENTHESIS parameters_list RPARENTHESIS SEMICOLON
 
 parameter :    
-        ε
+        epsilon
         | parameter id type COMMA
         ;
 
@@ -62,7 +78,7 @@ final_parameter:
         ;
 
 parameters_list:
-        ε
+        epsilon
         | parameter final_parameter
         ;
 
@@ -75,21 +91,23 @@ type :
         | F64
         ;    
 
-number :
+integer_number :
         INTEGER
-        | FLOAT
-        ;               
+        ;
+
+float_number :
+        FLOAT
+        ;                                    
 
 variable_declaration :
-        VAR id COLON type IS expression SEMICOLLON
-        | VAR id COLON type IS expression SEMICOLLON
+        VAR id COLON type IS expression SEMICOLON
         ;    
 
 variable_declaration_list :
-        ε
+        epsilon
         | variable_declaration_list variable_declaration
 
-statements :
+statement :
         assignment 
         | increment 
         | decrement 
@@ -100,17 +118,19 @@ statements :
         ; 
 
 statements_list :
-        ε
-        | statements_list statement 
+        epsilon
+        | statements_list statement
+        ;
 
 expression :
-        number                                  { $$ = $1; }
+        integer_number                          { $$ = $1; }
+        | float_number                          { $$ = $1; }
         | id                                    { $$ = $1; }
-        | number PLUS number                    { $$ = $1 + $3; }
-        | number MINUS number                   { $$ = $1 - $3; }
-        | number MULTI number                   { $$ = $1 * $3; }
-        | number DIV number                     { $$ = $1 / $3; }
-        | number REST number                    { $$ = $1 % $3; }
+        | expression PLUS expression            { $$ = $1 + $3; }
+        | expression MINUS expression           { $$ = $1 - $3; }
+        | expression MULTI expression           { $$ = $1 * $3; }
+        | expression DIV expression             { $$ = $1 / $3; }
+        | expression REST expression            { $$ = $1 % $3; }
         | LPARENTHESIS expression RPARENTHESIS  { $$ = $2; }
         ;
 
@@ -127,29 +147,30 @@ bool_expression : /* alterei o nome: comparision */
         ;
 
 assignment : 
-       id IS expression SEMICOLLON              { $$ = $3 }
-       | id IS function_call SEMICOLLON         { $$ = $3 }
+       id IS expression SEMICOLON              { $$ = $3 }
+       | id IS function_call SEMICOLON         { $$ = $3 }
        ;
 
 increment :
-        id INCREMENT SEMICOLLON   { $$ = $1 + 1; }
+        id INCREMENT SEMICOLON   { $$ = $1 + 1; }
         ;
 
 decrement :
-        id DECREMENT SEMICOLLON   { $$ = $1 - 1; }
+        id DECREMENT SEMICOLON   { $$ = $1 - 1; }
         ;
 
 return_statement :
-        RETURN number SEMICOLLON   { printf("Return: %d\n", $2); }
+        RETURN integer_number SEMICOLON   { printf("Return: %d\n", $2); }
+        | RETURN float_number SEMICOLON    { printf("Return: %d\n", $2); }
         ;
 
 if_statement : 
-        IF LPARENTHESIS bool_expression RPARENTHESIS LBRACES statements_list RBRACES
-        | IF LPARENTHESIS bool_expression RPARENTHESIS LBRACES statements_list RBRACES ELSE LBRACES statements_list RBRACES
+        IF LPARENTHESIS bool_expression RPARENTHESIS LBRACE statements_list RBRACE
+        | IF LPARENTHESIS bool_expression RPARENTHESIS LBRACE statements_list RBRACE ELSE LBRACE statements_list RBRACE
         ;
 
 loop :
-        WHILE LPARENTHESIS bool_expression RPARENTHESIS LBRACES statements_list RBRACES
+        WHILE LPARENTHESIS bool_expression RPARENTHESIS LBRACE statements_list RBRACE
         ;  
 
 %%
