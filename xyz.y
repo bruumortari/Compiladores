@@ -11,6 +11,29 @@
 
 int yydebug = 0;
 
+/* Tabela de Símbolos */
+#define MAX_SYMBOLS 100
+
+struct Symbol {
+    char* function; // função a qual pertence a variável
+    char* name;  // nome da variável 
+    char* type;  // tipo da variável
+} Symbol;
+
+Symbol symbolTable[MAX_SYMBOLS];
+int symbolCount = 0;
+int functionSymbomCount = 0;
+
+void addSymbol(char* name, char* type) {
+    if (symbolCount >= MAX_SYMBOLS) {
+        printf("Erro: A tabela de símbolos está cheia.\n");
+        return;
+    }
+    symbolTable[symbolCount].name = name;
+    symbolTable[symbolCount].type = type;
+    symbolCount++;
+}
+
 /* Flex */
 extern int yylineno;
 
@@ -52,17 +75,28 @@ extern int yylex();
 %%
 
 program : function_list FUNCTION MAIN LPARENTHESIS RPARENTHESIS LBRACE variable_declaration_list statements_list RBRACE
+        {
+                for (int i = index; i < symbol_count; i++) {
+                        symbolTable[i].function = "main";
+                }
+        }
 
 function :
-        FUNCTION id LPARENTHESIS parameters_list RPARENTHESIS LBRACE variable_declaration_list statements_list RBRACE
-   	;
+        FUNCTION id LPARENTHESIS parameters_list RPARENTHESIS LBRACE variable_declaration_list statements_list RBRACE 
+        {
+                
+                for (int i = index; i < symbol_count; i++) {
+                        symbolTable[i].function = $2;
+                }
+        }
+   	; 
 
 epsilon :
         ;        
 
 function_list : 
         epsilon
-        | function_list function
+        | function_list function 
         ;
 
 function_call :
@@ -70,11 +104,11 @@ function_call :
 
 parameter :    
         epsilon
-        | parameter id type COMMA
+        | parameter id type COMMA       { addSymbol($2, $3); }
         ;
 
 final_parameter:
-        id type
+        id type         { addSymbol($2, $3); }
         ;
 
 parameters_list:
@@ -101,10 +135,11 @@ float_number :
 
 variable :
         epsilon
-        | id COLON type IS expression COMMA variable
+        | id COLON type IS expression COMMA variable    { addSymbol($1, $3); } 
+        ;
 
 final_variable :
-        id COLON type IS expression SEMICOLLON
+        id COLON type IS expression SEMICOLLON          { addSymbol($1, $3); } 
         ;
 
 variable_list :
@@ -157,21 +192,22 @@ bool_expression :
         ;
 
 assignment : 
-       id IS expression SEMICOLON              { $$ = $3 }
-       | id IS function_call SEMICOLON         { $$ = $3 }
+       id IS expression SEMICOLON             
+    
+       | id IS function_call SEMICOLON         
        ;
 
 increment :
-        id INCREMENT SEMICOLON   { $$ = $1 + 1; }
+        id INCREMENT SEMICOLON   
         ;
 
 decrement :
-        id DECREMENT SEMICOLON   { $$ = $1 - 1; }
+        id DECREMENT SEMICOLON   
         ;
 
 return_statement :
         RETURN integer_number SEMICOLON   { printf("Return: %d\n", $2); }
-        | RETURN float_number SEMICOLON    { printf("Return: %d\n", $2); }
+        | RETURN float_number SEMICOLON    { printf("Return: %f\n", $2); }
         ;
 
 if_statement : 
