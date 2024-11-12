@@ -99,13 +99,23 @@ float_number :
         FLOAT
         ;                                    
 
-variable_declaration :
-        VAR id COLON type IS expression SEMICOLON
-        ;    
-
-variable_declaration_list :
+variable :
         epsilon
-        | variable_declaration_list variable_declaration
+        | id COLON type IS expression COMMA variable
+
+final_variable :
+        id COLON type IS expression SEMICOLLON
+        ;
+
+variable_list :
+        epsilon
+        | variable final_variable
+        ;
+
+variables_declaration :
+        epsilon
+        | VAR variable_list 
+        ;    
 
 statement :
         assignment 
@@ -134,7 +144,7 @@ expression :
         | LPARENTHESIS expression RPARENTHESIS  { $$ = $2; }
         ;
 
-bool_expression : /* alterei o nome: comparision */
+bool_expression : 
         expression EQ expression
         | expression GREATERTHAN expression
         | expression EQG expression
