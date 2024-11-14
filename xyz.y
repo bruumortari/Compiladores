@@ -1,15 +1,15 @@
 /* 
    Linguagem XYZ
 */
-
 %{
 
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "lex.yy.c"
 
-int yydebug = 0;
+void yyerror(char *msg);
 
 /* Tabela de Símbolos */
 #define MAX_SYMBOLS 100
@@ -20,28 +20,27 @@ struct Symbol {
     char* type;  // tipo da variável
 } Symbol;
 
-Symbol symbolTable[MAX_SYMBOLS];
+struct Symbol symbolTable[MAX_SYMBOLS];
 int symbolCount = 0;
-int functionSymbomCount = 0;
+int functionSymbolCount = 0;
 
 void addSymbol(char* name, char* type) {
     if (symbolCount >= MAX_SYMBOLS) {
         printf("Erro: A tabela de símbolos está cheia.\n");
-        return;
+        return 1;
     }
-    symbolTable[symbolCount].name = name;
-    symbolTable[symbolCount].type = type;
+    symbolTable[symbolCount].name = strdup(name);
+    symbolTable[symbolCount].type = strdup(type);
     symbolCount++;
 }
 
 /* Flex */
 extern int yylineno;
-
-extern int yyerror (char const *msg, ...);
 extern int yylex();
+extern FILE *yyin;
 %}
 
-/* Declaracoes bison */
+/* Declarções bison */
 %union {
         int d;
         double f;
@@ -51,15 +50,17 @@ extern int yylex();
 
 %token <d> INTEGER
 %token <f> FLOAT
-%token <d> IDENTIFIER
+%token <s> IDENTIFIER
 %token <type> I64 F64
 %token FUNCTION MAIN VAR LBRACE RBRACE LPARENTHESIS RPARENTHESIS
 %token IF ELSE WHILE RETURN
-%token PLUS MINUS MULTI DIV REST GREATERTHAN LESSTHAN EQL EQG IS DIFF AND OR EQ DIFFERENT INCREMENT DECREMENT NOT
+%token PLUS MINUS MULTI DIV GREATERTHAN LESSTHAN EQL EQG IS DIFF AND OR EQ DIFFERENT INCREMENT DECREMENT NOT
 %token SEMICOLON COMMA COLON
 
-%type <d> integer_number assignment increment decrement return_statement function_call id
-%type <f> float_number expression
+%type <d> integer_number return_statement_integer
+%type <s> id assignment increment decrement parameter final_parameter variable function_call epsilon
+%type <f> float_number expression return_statement_float
+%type <type> type
 
 /* Lista de precedência */
 %right INCREMENT DECREMENT
@@ -74,25 +75,24 @@ extern int yylex();
 /* Gramática */
 %%
 
-program : function_list FUNCTION MAIN LPARENTHESIS RPARENTHESIS LBRACE variable_declaration_list statements_list RBRACE
+program : function_list FUNCTION MAIN LPARENTHESIS RPARENTHESIS LBRACE variable_list statements_list RBRACE
         {
-                for (int i = index; i < symbol_count; i++) {
+                for (int i = 0; i < symbolCount; i++) {
                         symbolTable[i].function = "main";
                 }
         }
 
 function :
-        FUNCTION id LPARENTHESIS parameters_list RPARENTHESIS LBRACE variable_declaration_list statements_list RBRACE 
+        FUNCTION id LPARENTHESIS parameters_list RPARENTHESIS LBRACE variable_list statements_list RBRACE 
         {
                 
-                for (int i = index; i < symbol_count; i++) {
+                for (int i = 0; i < symbolCount; i++) {
                         symbolTable[i].function = $2;
                 }
         }
    	; 
 
-epsilon :
-        ;        
+epsilon :  ;        
 
 function_list : 
         epsilon
@@ -108,7 +108,7 @@ parameter :
         ;
 
 final_parameter:
-        id type         { addSymbol($2, $3); }
+        id type         { addSymbol($1, $2); }
         ;
 
 parameters_list:
@@ -139,18 +139,14 @@ variable :
         ;
 
 final_variable :
-        id COLON type IS expression SEMICOLLON          { addSymbol($1, $3); } 
+        id COLON type IS expression SEMICOLON          { addSymbol($1, $3); } 
         ;
 
 variable_list :
         epsilon
-        | variable final_variable
-        ;
-
-variables_declaration :
-        epsilon
-        | VAR variable_list 
-        ;    
+        | variable variable_list
+        | final_variable
+        ;   
 
 statement :
         assignment 
@@ -159,7 +155,8 @@ statement :
         | if_statement 
         | loop 
         | function_call
-        | return_statement
+        | return_statement_integer
+        | return_statement_float
         ; 
 
 statements_list :
@@ -170,12 +167,10 @@ statements_list :
 expression :
         integer_number                          { $$ = $1; }
         | float_number                          { $$ = $1; }
-        | id                                    { $$ = $1; }
         | expression PLUS expression            { $$ = $1 + $3; }
         | expression MINUS expression           { $$ = $1 - $3; }
         | expression MULTI expression           { $$ = $1 * $3; }
         | expression DIV expression             { $$ = $1 / $3; }
-        | expression REST expression            { $$ = $1 % $3; }
         | LPARENTHESIS expression RPARENTHESIS  { $$ = $2; }
         ;
 
@@ -205,9 +200,12 @@ decrement :
         id DECREMENT SEMICOLON   
         ;
 
-return_statement :
+return_statement_integer :
         RETURN integer_number SEMICOLON   { printf("Return: %d\n", $2); }
-        | RETURN float_number SEMICOLON    { printf("Return: %f\n", $2); }
+        ;
+
+return_statement_float :
+        RETURN float_number SEMICOLON    { printf("Return: %f\n", $2); }
         ;
 
 if_statement : 
@@ -220,19 +218,25 @@ loop :
         ;  
 
 %%
-#include "calc.yy.c"
 
-int yyerror(const char *msg, ...) {
-	va_list args;
-
-	va_start(args, msg);
-	vfprintf(stderr, msg, args);
-	va_end(args);
-
-	exit(EXIT_FAILURE);
+void yyerror(char *msg) {
+    fprintf(stderr, "Erro: %s\n", msg);
 }
 
-int main (int argc, char **argv) {
-    return  yyparse();
+int main () {
+    FILE* file = fopen("fat.xyz", "r"); // Abre o arquivo para leitura
 
+    if (!file) {
+        fprintf(stderr, "Erro ao abrir o arquivo.\n");
+        return;
+    }
+
+    yyin = file;
+
+    // Chama a função de análise sintática
+    yyparse();
+
+    fclose(file);
+
+    return 0;
 }
