@@ -13,6 +13,7 @@ void yyerror(char *msg);
 
 /* Tabela de Símbolos */
 #define MAX_SYMBOLS 100
+char* currentFunction = NULL;
 
 struct Symbol {
     char* function; // função a qual pertence a variável
@@ -27,11 +28,21 @@ int functionSymbolCount = 0;
 void addSymbol(char* name, char* type) {
     if (symbolCount >= MAX_SYMBOLS) {
         printf("Erro: A tabela de símbolos está cheia.\n");
-        return 1;
+        return;
     }
     symbolTable[symbolCount].name = strdup(name);
     symbolTable[symbolCount].type = strdup(type);
+    symbolTable[symbolCount].function = strdup(currentFunction);
     symbolCount++;
+}
+
+void printSymbolTable() {
+    printf("Tabela de Símbolos:\n");
+    printf("----------------------------------------\n");
+
+    for (int i = 0; i < symbolCount; i++) {
+        printf("%s.%s [%s]\n", symbolTable[i].function, symbolTable[i].name, symbolTable[i].type);
+    }
 }
 
 /* Flex */
@@ -77,18 +88,21 @@ extern FILE *yyin;
 
 program : function_list FUNCTION MAIN LPARENTHESIS RPARENTHESIS LBRACE variable_list statements_list RBRACE
         {
-                for (int i = 0; i < symbolCount; i++) {
+                currentFunction = "main"; // Define o contexto como "main"
+                for (int i = functionSymbolCount; i < symbolCount; i++) {
                         symbolTable[i].function = "main";
                 }
+                functionSymbolCount = symbolCount;
         }
 
 function :
         FUNCTION id LPARENTHESIS parameters_list RPARENTHESIS LBRACE variable_list statements_list RBRACE 
         {
-                
-                for (int i = 0; i < symbolCount; i++) {
-                        symbolTable[i].function = $2;
+                currentFunction = strdup($2);
+                for (int i = functionSymbolCount; i < symbolCount; i++) {
+                        symbolTable[i].function = currentFunction;
                 }
+                functionSymbolCount = symbolCount;
         }
    	; 
 
@@ -104,11 +118,15 @@ function_call :
 
 parameter :    
         epsilon
-        | parameter id type COMMA       { addSymbol($2, $3); }
+        | parameter id type COMMA { 
+                addSymbol($2, $3); 
+        }
         ;
 
 final_parameter:
-        id type         { addSymbol($1, $2); }
+        id type { 
+                addSymbol($1, $2); 
+        }
         ;
 
 parameters_list:
@@ -133,13 +151,18 @@ float_number :
         FLOAT
         ;                                    
 
+
 variable :
         epsilon
-        | id COLON type IS expression COMMA variable    { addSymbol($1, $3); } 
+        | id COLON type IS expression COMMA variable { 
+                addSymbol($1, $3); 
+        } 
         ;
 
 final_variable :
-        id COLON type IS expression SEMICOLON          { addSymbol($1, $3); } 
+        id COLON type IS expression SEMICOLON { 
+                addSymbol($1, $3); 
+        } 
         ;
 
 variable_list :
@@ -201,11 +224,11 @@ decrement :
         ;
 
 return_statement_integer :
-        RETURN integer_number SEMICOLON   { printf("Return: %d\n", $2); }
+        RETURN integer_number SEMICOLON   
         ;
 
 return_statement_float :
-        RETURN float_number SEMICOLON    { printf("Return: %f\n", $2); }
+        RETURN float_number SEMICOLON    
         ;
 
 if_statement : 
@@ -237,6 +260,9 @@ int main () {
     yyparse();
 
     fclose(file);
+
+    // Imprimir a tabela de símbolos após a análise
+    printSymbolTable();
 
     return 0;
 }
