@@ -42,8 +42,8 @@
 "--"                   { return DECREMENT; } 
 "!"                    { return NOT; } 
 [a-zA-Z][a-zA-Z_]*     { yylval.s = strdup(yytext); return IDENTIFIER;} 
-[-]?[0-9]+                 { yylval.d = atoi(yytext); return INTEGER; }
-[-]?[0-9]+(\.[0-9]+)   { yylval.f = atof(yytext); return FLOAT; }
+"-"?[0-9]+                 { yylval.d = atoi(yytext); return INTEGER; }
+"-"?[0-9]+(\.[0-9]+)   { yylval.f = atof(yytext); return FLOAT; }
 [ \n\t\r]              {  } 
 "//".*                 {  } 
 "/*"[a-zA-Z0-9\n\t\r_"*"]*"*/"      {  } 

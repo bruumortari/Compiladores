@@ -37,7 +37,7 @@ void addSymbol(char* name, char* type) {
 }
 
 void printSymbolTable() {
-    printf("Tabela de Símbolos:\n");
+    printf("Tabela de Simbolos:\n");
     printf("----------------------------------------\n");
 
     for (int i = 0; i < symbolCount; i++) {
@@ -68,9 +68,7 @@ extern FILE *yyin;
 %token PLUS MINUS MULTI DIV GREATERTHAN LESSTHAN EQL EQG IS DIFF AND OR EQ DIFFERENT INCREMENT DECREMENT NOT
 %token SEMICOLON COMMA COLON
 
-%type <d> integer_number return_statement_integer
-%type <s> id assignment increment decrement parameter final_parameter variable function_call epsilon
-%type <f> float_number expression return_statement_float
+%type <s> id
 %type <type> type
 
 /* Lista de precedência */
@@ -86,14 +84,22 @@ extern FILE *yyin;
 /* Gramática */
 %%
 
-program : function_list FUNCTION MAIN LPARENTHESIS RPARENTHESIS LBRACE variable_list statements_list RBRACE
+program :
+        function_list FUNCTION MAIN LPARENTHESIS RPARENTHESIS LBRACE variable_list statements_list RBRACE 
         {
-                currentFunction = "main"; // Define o contexto como "main"
+                currentFunction = "main";
                 for (int i = functionSymbolCount; i < symbolCount; i++) {
-                        symbolTable[i].function = "main";
+                        symbolTable[i].function = currentFunction;
                 }
                 functionSymbolCount = symbolCount;
+                printSymbolTable();
         }
+   	;
+
+function_list: 
+        epsilon
+        | function_list function
+        ;        
 
 function :
         FUNCTION id LPARENTHESIS parameters_list RPARENTHESIS LBRACE variable_list statements_list RBRACE 
@@ -103,27 +109,31 @@ function :
                         symbolTable[i].function = currentFunction;
                 }
                 functionSymbolCount = symbolCount;
+                printSymbolTable();
         }
    	; 
 
 epsilon :  ;        
 
-function_list : 
-        epsilon
-        | function_list function 
+function_call :
+        id LPARENTHESIS parameters_call_list RPARENTHESIS SEMICOLON
         ;
 
-function_call :
-        id LPARENTHESIS parameters_list RPARENTHESIS SEMICOLON
+parameters_call_list :
+        epsilon
+        | parameter_call non_empty_parameter_call
+        ;
+
+parameter_call :
+        id
+        ; 
+
+non_empty_parameter_call :
+        COMMA parameter_call non_empty_parameter_call
+        | epsilon
+        ;                       
 
 parameter :    
-        epsilon
-        | parameter id type COMMA { 
-                addSymbol($2, $3); 
-        }
-        ;
-
-final_parameter:
         id type { 
                 addSymbol($1, $2); 
         }
@@ -131,8 +141,12 @@ final_parameter:
 
 parameters_list:
         epsilon
-        | parameter final_parameter
+        | parameter non_empty_parameters
         ;
+
+non_empty_parameters:
+        epsilon
+        | COMMA parameter non_empty_parameters
 
 id : 
         IDENTIFIER
@@ -141,35 +155,23 @@ id :
 type :
         I64
         | F64
-        ;    
-
-integer_number :
-        INTEGER
-        ;
-
-float_number :
-        FLOAT
-        ;                                    
-
+        ;                                        
 
 variable :
-        epsilon
-        | id COLON type IS expression COMMA variable { 
-                addSymbol($1, $3); 
-        } 
-        ;
-
-final_variable :
-        id COLON type IS expression SEMICOLON { 
+        id COLON type IS expression { 
                 addSymbol($1, $3); 
         } 
         ;
 
 variable_list :
         epsilon
-        | variable variable_list
-        | final_variable
-        ;   
+        | VAR variable non_empty_variables_list
+        ;
+
+non_empty_variables_list :
+        SEMICOLON
+        | COMMA variable non_empty_variables_list
+        ;
 
 statement :
         assignment 
@@ -178,23 +180,24 @@ statement :
         | if_statement 
         | loop 
         | function_call
-        | return_statement_integer
-        | return_statement_float
+        | return_statement
         ; 
 
 statements_list :
         epsilon
-        | statements_list statement
+        | statement statements_list
         ;
 
 expression :
-        integer_number                          { $$ = $1; }
-        | float_number                          { $$ = $1; }
-        | expression PLUS expression            { $$ = $1 + $3; }
-        | expression MINUS expression           { $$ = $1 - $3; }
-        | expression MULTI expression           { $$ = $1 * $3; }
-        | expression DIV expression             { $$ = $1 / $3; }
-        | LPARENTHESIS expression RPARENTHESIS  { $$ = $2; }
+        INTEGER                          
+        | FLOAT
+        | IDENTIFIER                          
+        | expression PLUS expression            
+        | expression MINUS expression           
+        | expression MULTI expression           
+        | expression DIV expression
+        | bool_expression             
+        | LPARENTHESIS expression RPARENTHESIS  
         ;
 
 bool_expression : 
@@ -204,14 +207,13 @@ bool_expression :
         | expression LESSTHAN expression
         | expression EQL expression
         | expression DIFF expression
-        | bool_expression AND bool_expression
-        | bool_expression OR bool_expression
-        | NOT bool_expression
+        | expression AND expression
+        | expression OR expression
+        | NOT expression
         ;
 
 assignment : 
        id IS expression SEMICOLON             
-    
        | id IS function_call SEMICOLON         
        ;
 
@@ -223,35 +225,32 @@ decrement :
         id DECREMENT SEMICOLON   
         ;
 
-return_statement_integer :
-        RETURN integer_number SEMICOLON   
+return_statement :
+        RETURN expression SEMICOLON
+        | RETURN SEMICOLON
         ;
 
-return_statement_float :
-        RETURN float_number SEMICOLON    
-        ;
-
-if_statement : 
-        IF LPARENTHESIS bool_expression RPARENTHESIS LBRACE statements_list RBRACE
-        | IF LPARENTHESIS bool_expression RPARENTHESIS LBRACE statements_list RBRACE ELSE LBRACE statements_list RBRACE
+if_statement :
+        IF expression LBRACE statements_list RBRACE
+        | IF expression LBRACE statements_list RBRACE ELSE LBRACE statements_list RBRACE
         ;
 
 loop :
-        WHILE LPARENTHESIS bool_expression RPARENTHESIS LBRACE statements_list RBRACE
+        WHILE expression LBRACE statements_list RBRACE
         ;  
 
 %%
 
 void yyerror(char *msg) {
-    fprintf(stderr, "Erro: %s\n", msg);
+    fprintf(stderr, "Erro: %s na linha %d\n", msg, yylineno);
 }
 
 int main () {
-    FILE* file = fopen("fat.xyz", "r"); // Abre o arquivo para leitura
+    FILE* file = fopen("fat.txt", "r"); // Abre o arquivo para leitura
 
     if (!file) {
         fprintf(stderr, "Erro ao abrir o arquivo.\n");
-        return;
+        return 1;
     }
 
     yyin = file;
@@ -262,7 +261,7 @@ int main () {
     fclose(file);
 
     // Imprimir a tabela de símbolos após a análise
-    printSymbolTable();
+    // printSymbolTable();
 
     return 0;
 }
