@@ -16,9 +16,9 @@ void yyerror(char *msg);
 char* currentFunction = NULL;
 
 struct Symbol {
-    char* function; // função a qual pertence a variável
     char* name;  // nome da variável 
     char* type;  // tipo da variável
+    char* function; // função a qual pertence a variável
 } Symbol;
 
 struct Symbol symbolTable[MAX_SYMBOLS];
@@ -32,7 +32,6 @@ void addSymbol(char* name, char* type) {
     }
     symbolTable[symbolCount].name = strdup(name);
     symbolTable[symbolCount].type = strdup(type);
-    symbolTable[symbolCount].function = strdup(currentFunction);
     symbolCount++;
 }
 
