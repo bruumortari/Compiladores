@@ -16,9 +16,9 @@ void yyerror(char *msg);
 char* currentFunction = NULL;
 
 struct Symbol {
-    char* function; // função a qual pertence a variável
     char* name;  // nome da variável 
     char* type;  // tipo da variável
+    char* function; // função a qual pertence a variável
 } Symbol;
 
 struct Symbol symbolTable[MAX_SYMBOLS];
@@ -28,13 +28,11 @@ int functionSymbolCount = 0;
 void addSymbol(char* name, char* type) {
     if (symbolCount >= MAX_SYMBOLS) {
         printf("Erro: A tabela de símbolos está cheia.\n");
+        return;
     }
-    else {
-        symbolTable[symbolCount].name = strdup(name);
-        symbolTable[symbolCount].type = strdup(type);
-        symbolTable[symbolCount].function = strdup(currentFunction);
-        symbolCount++;
-    }
+    symbolTable[symbolCount].name = strdup(name);
+    symbolTable[symbolCount].type = strdup(type);
+    symbolCount++;
 }
 
 void printSymbolTable() {
@@ -62,9 +60,9 @@ extern FILE *yyin;
 
 %token <d> INTEGER
 %token <f> FLOAT
-%token <s> IDENTIFIER MAIN
+%token <s> IDENTIFIER
 %token <type> I64 F64
-%token FUNCTION VAR LBRACE RBRACE LPARENTHESIS RPARENTHESIS
+%token FUNCTION MAIN VAR LBRACE RBRACE LPARENTHESIS RPARENTHESIS
 %token IF ELSE WHILE RETURN
 %token PLUS MINUS MULTI DIV GREATERTHAN LESSTHAN EQL EQG IS DIFF AND OR EQ DIFFERENT INCREMENT DECREMENT NOT
 %token SEMICOLON COMMA COLON
@@ -86,31 +84,38 @@ extern FILE *yyin;
 %%
 
 program :
-    function_list
-    ;
+        function_list FUNCTION MAIN LPARENTHESIS RPARENTHESIS LBRACE variable_list statements_list RBRACE 
+        {
+                currentFunction = "main";
+                for (int i = functionSymbolCount; i < symbolCount; i++) {
+                        symbolTable[i].function = currentFunction;
+                }
+                functionSymbolCount = symbolCount;
+                printSymbolTable();
+        }
+   	;
 
-function_list : 
-    epsilon
-    | function function_list
-    ;
+function_list: 
+        epsilon
+        | function_list function
+        ;        
 
 function :
-    FUNCTION id LPARENTHESIS parameters_list RPARENTHESIS LBRACE variable_list statements_list RBRACE
-    {
-        currentFunction = strdup($2);
-        for (int i = functionSymbolCount; i < symbolCount; i++) {
-            symbolTable[i].function = currentFunction;
+        FUNCTION id LPARENTHESIS parameters_list RPARENTHESIS LBRACE variable_list statements_list RBRACE 
+        {
+                currentFunction = strdup($2);
+                for (int i = functionSymbolCount; i < symbolCount; i++) {
+                        symbolTable[i].function = currentFunction;
+                }
+                functionSymbolCount = symbolCount;
+                printSymbolTable();
         }
-        functionSymbolCount = symbolCount;
-        //printSymbolTable();
-    }
-    ;    
+   	; 
 
 epsilon :  ;        
 
 function_call :
         id LPARENTHESIS parameters_call_list RPARENTHESIS SEMICOLON
-        | id IS id LPARENTHESIS parameters_call_list RPARENTHESIS SEMICOLON
         ;
 
 parameters_call_list :
@@ -144,7 +149,6 @@ non_empty_parameters:
 
 id : 
         IDENTIFIER
-        | MAIN
         ; 
 
 type :
@@ -208,7 +212,8 @@ bool_expression :
         ;
 
 assignment : 
-       id IS expression SEMICOLON                    
+       id IS expression SEMICOLON             
+       | id IS function_call SEMICOLON         
        ;
 
 increment :
@@ -221,6 +226,7 @@ decrement :
 
 return_statement :
         RETURN expression SEMICOLON
+        | RETURN SEMICOLON
         ;
 
 if_statement :
@@ -239,7 +245,6 @@ void yyerror(char *msg) {
 }
 
 int main () {
-
     FILE* file = fopen("fat.txt", "r"); // Abre o arquivo para leitura
 
     if (!file) {
@@ -252,9 +257,10 @@ int main () {
     // Chama a função de análise sintática
     yyparse();
 
-    printSymbolTable();
-
     fclose(file);
+
+    // Imprimir a tabela de símbolos após a análise
+    // printSymbolTable();
 
     return 0;
 }
