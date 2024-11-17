@@ -10,7 +10,7 @@
 
 %%
 "fn"                   { return FUNCTION; }
-"main"                 { return MAIN; }
+"main"                 { yylval.s = "main"; return MAIN; }
 "var"                  { return VAR; }
 "{"                    { return LBRACE; }
 "}"                    { return RBRACE; }
@@ -36,13 +36,13 @@
 ";"                    { return SEMICOLON; }
 ":"                    { return COLON; }
 ","                    { return COMMA; }
-"i64"                  { return I64; } 
-"f64"                  { return F64; }
+"i64"                  { yylval.type = "i64"; return I64; } 
+"f64"                  { yylval.type = "f64"; return F64; }
 "++"                   { return INCREMENT; }
 "--"                   { return DECREMENT; } 
 "!"                    { return NOT; } 
 [a-zA-Z][a-zA-Z_]*     { yylval.s = strdup(yytext); return IDENTIFIER;} 
-"-"?[0-9]+                 { yylval.d = atoi(yytext); return INTEGER; }
+"-"?[0-9]+             { yylval.d = atoi(yytext); return INTEGER; }
 "-"?[0-9]+(\.[0-9]+)   { yylval.f = atof(yytext); return FLOAT; }
 [ \n\t\r]              {  } 
 "//".*                 {  } 
