@@ -73,14 +73,10 @@ extern FILE *yyin;
 %type <type> type
 
 /* Lista de precedência */
-%right INCREMENT DECREMENT
-%right NOT
-%left MULTI DIV REST
+%left MULTI DIV
 %left PLUS MINUS
 %nonassoc GREATERTHAN LESSTHAN EQL EQG DIFF
-%nonassoc EQ DIFFERENT
-%right IS
-%left AND OR
+%nonassoc EQ DIFFERENT AND OR
 
 /* Gramática */
 %%
@@ -102,7 +98,6 @@ function :
             symbolTable[i].function = currentFunction;
         }
         functionSymbolCount = symbolCount;
-        //printSymbolTable();
     }
     ;    
 
