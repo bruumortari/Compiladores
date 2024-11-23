@@ -1,4 +1,4 @@
-// fat.xyz
+// Programa fat.xyz
 fn fatorial(n i64) {
     var
         i : i64 = 1,

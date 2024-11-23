@@ -1,5 +1,8 @@
 /* 
    Linguagem XYZ
+
+   Bruna
+   Larissa
 */
 %{
 
@@ -37,7 +40,21 @@ void addSymbol(char* name, char* type) {
     }
 }
 
+void checkSymbol() {
+    for (int i = 0; i < symbolCount; i++) {
+        for (int j = i + 1; j < symbolCount; j++) {
+            if (strcmp(symbolTable[i].function, symbolTable[j].function) == 0 &&
+                strcmp(symbolTable[i].name, symbolTable[j].name) == 0) {
+                printf("Erro: A variável '%s' foi declarada mais de uma vez na função '%s'!\n",
+                       symbolTable[i].name, symbolTable[i].function);
+            }
+        }
+    }
+}
+
+
 void printSymbolTable() {
+    checkSymbol();
     printf("Tabela de Simbolos:\n");
     printf("----------------------------------------\n");
 
@@ -52,7 +69,7 @@ extern int yylex();
 extern FILE *yyin;
 %}
 
-/* Declarções bison */
+/* Declarações bison */
 %union {
         int d;
         double f;
@@ -147,20 +164,20 @@ type :
         | F64
         ;                                        
 
+variable_list :
+        epsilon
+        | VAR variable non_empty_variables_list SEMICOLON
+        ;
+
 variable :
         id COLON type IS expression { 
                 addSymbol($1, $3); 
         } 
         ;
 
-variable_list :
-        epsilon
-        | VAR variable non_empty_variables_list
-        ;
-
 non_empty_variables_list :
-        SEMICOLON
-        | COMMA variable non_empty_variables_list
+        COMMA variable non_empty_variables_list
+        | epsilon
         ;
 
 statement :

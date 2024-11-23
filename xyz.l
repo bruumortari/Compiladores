@@ -1,3 +1,9 @@
+/* 
+   Linguagem XYZ
+
+   Bruna
+   Larissa
+*/
 %{
     #include <stdlib.h>
     #include <string.h>
