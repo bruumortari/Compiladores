@@ -1,0 +1,42 @@
+fn sum(n i64) {
+    var
+        total : i64 = 0,
+        i : i64 = 0;
+
+    while i <= n {
+        total = total + i;
+        i++;
+    }
+
+    return total;
+}
+
+fn multi(n i64) {
+    var
+        total : i64 = 0,
+        i : i64 = 0;
+
+    while i <= n {
+        total = total * i;
+        i++;
+    }
+
+    return total;
+}
+
+fn main() {
+    var
+        number : i64 = 10,
+        resultSum : i64 = 0;
+        resultMulti : i64 = 0;
+
+    resultSum = sum(number);
+
+    resultMulti = multi(number);
+
+    if resultMulti < resultSum {
+        return 1;
+    } else {
+        return 0;
+    }
+}
