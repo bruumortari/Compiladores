@@ -50,7 +50,7 @@ void addSymbol(char* name, char* type) {
 void isDeclared(char* name) {
     for (int i = 0; i < symbolCount; i++) {
         if (strcmp(symbolTable[i].name, name) == 0 &&
-            symbolTable[i].function == NULL) {
+            strcmp(symbolTable[i].function, NULL) == 0) {
             printf("Variavel '%s' declarada na funcao %s", name, currentFunction);
         }
     }
