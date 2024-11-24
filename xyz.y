@@ -31,7 +31,7 @@ int functionSymbolCount = 0;
 
 void addSymbol(char* name, char* type) {
     if (symbolCount >= MAX_SYMBOLS) {
-        printf("Erro: A tabela de símbolos está cheia.\n");
+        printf("Erro: A tabela de simbolos está cheia.\n");
     }
     else {
         symbolTable[symbolCount].name = strdup(name);
@@ -54,7 +54,7 @@ void isDeclared(char* name) {
             return;
         }
     }
-    fprintf(stderr, "Erro: Variavel '%s' sem declaracao - currentFunction = %s", name, currentFunction);
+    fprintf(stderr, "Erro: Variavel '%s' sem declaracao", name);
 }
 
 void printSymbolTable() {
