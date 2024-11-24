@@ -27,7 +27,7 @@ fn multi(n i64) {
 fn main() {
     var
         number : i64 = 10,
-        resultSum : i64 = 0;
+        resultSum : i64 = 0,
         resultMulti : i64 = 0;
 
     resultSum = sum(number);

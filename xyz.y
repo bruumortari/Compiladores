@@ -1,7 +1,9 @@
-// Linguagem XYZ
+/* Linguagem XYZ
 
-// Bruna Bertolo Mortari - 11795892
-// Larissa Magalhães Pereira - 13747904
+ Bruna Bertolo Mortari - 11795892
+ Larissa Magalhães Pereira - 13747904
+
+*/
 
 %{
 
