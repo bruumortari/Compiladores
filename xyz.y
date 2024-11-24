@@ -52,6 +52,21 @@ void checkSymbol() {
     }
 }
 
+// Descreva como checar se uma variável ao ser usada, já foi declarada:
+// A conferência de declaração de variáveis é realizada por meio de uma função (isDeclared) que verifica 
+// se o nome da variável está presente na tabela de símbolos e está associado ao escopo correto (função atual). 
+// Quando uma variável é usada em uma expressão ou atribuição, a função é chamada para garantir que a variável já foi previamente declarada. 
+// Caso a variável não seja encontrada, a função gera um erro, interrompendo a execução do programa. 
+
+void isDeclared(char* name) {
+    for (int i = 0; i < symbolCount; i++) {
+        if (strcmp(symbolTable[i].name, name) == 0 &&
+            strcmp(symbolTable[i].function == NULL) == 0) {
+            return;
+        }
+    }
+    fprintf(stderr, "Erro: Variável '%s' sem declaração", name);
+}
 
 void printSymbolTable() {
     checkSymbol();
@@ -198,7 +213,9 @@ statements_list :
 expression :
         INTEGER                          
         | FLOAT
-        | IDENTIFIER                          
+        | IDENTIFIER { 
+                isDeclared($1);
+        }                     
         | expression PLUS expression            
         | expression MINUS expression           
         | expression MULTI expression           
