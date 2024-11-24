@@ -52,6 +52,7 @@ void isDeclared(char* name) {
         if (strcmp(symbolTable[i].name, name) == 0 &&
             strcmp(symbolTable[i].function, NULL) == 0) {
             printf("Variavel '%s' declarada na funcao %s", name, currentFunction);
+            return;
         }
     }
     fprintf(stderr, "Erro: Variavel '%s' sem declaracao - currentFunction = %s", name, currentFunction);
