@@ -36,7 +36,7 @@ void addSymbol(char* name, char* type) {
     else {
         symbolTable[symbolCount].name = strdup(name);
         symbolTable[symbolCount].type = strdup(type);
-        symbolTable[symbolCount].function = strdup(currentFunction);
+        symbolTable[symbolCount].function = NULL;
         symbolCount++;
     }
 }
@@ -51,7 +51,7 @@ void isDeclared(char* name) {
     for (int i = 0; i < symbolCount; i++) {
         if (strcmp(symbolTable[i].name, name) == 0 &&
             symbolTable[i].function == NULL) {
-            printf(stderr, "Variavel '%s' declarada na funcao %s", name, currentFunction);
+            printf("Variavel '%s' declarada na funcao %s", name, currentFunction);
         }
     }
     fprintf(stderr, "Erro: Variavel '%s' sem declaracao - currentFunction = %s", name, currentFunction);
