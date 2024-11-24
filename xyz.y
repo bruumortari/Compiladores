@@ -17,7 +17,7 @@ void yyerror(char *msg);
 
 /* Tabela de Símbolos */
 #define MAX_SYMBOLS 100
-char* currentFunction = NULL;
+char* currentFunction = "null";
 
 struct Symbol {
     char* function; // função a qual pertence a variável
@@ -36,7 +36,7 @@ void addSymbol(char* name, char* type) {
     else {
         symbolTable[symbolCount].name = strdup(name);
         symbolTable[symbolCount].type = strdup(type);
-        symbolTable[symbolCount].function = NULL;
+        symbolTable[symbolCount].function = "null";
         symbolCount++;
     }
 }
@@ -50,8 +50,7 @@ void addSymbol(char* name, char* type) {
 void isDeclared(char* name) {
     for (int i = 0; i < symbolCount; i++) {
         if (strcmp(symbolTable[i].name, name) == 0 &&
-            strcmp(symbolTable[i].function, NULL) == 0) {
-            printf("Variavel '%s' declarada na funcao %s", name, currentFunction);
+            strcmp(symbolTable[i].function, "null") == 0) {
             return;
         }
     }
