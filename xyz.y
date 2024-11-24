@@ -36,11 +36,7 @@ void addSymbol(char* name, char* type) {
     else {
         symbolTable[symbolCount].name = strdup(name);
         symbolTable[symbolCount].type = strdup(type);
-<<<<<<< HEAD
         symbolTable[symbolCount].function = "null";
-=======
-        symbolTable[symbolCount].function = 'none';
->>>>>>> 46130a71ea0fde871f2e275e69a3f5d3cdcd1b21
         symbolCount++;
     }
 }
@@ -54,12 +50,7 @@ void addSymbol(char* name, char* type) {
 void isDeclared(char* name) {
     for (int i = 0; i < symbolCount; i++) {
         if (strcmp(symbolTable[i].name, name) == 0 &&
-<<<<<<< HEAD
             strcmp(symbolTable[i].function, "null") == 0) {
-=======
-            strcmp(symbolTable[i].function, 'none') == 0) {
-            printf("Variavel '%s' declarada na funcao %s", name, currentFunction);
->>>>>>> 46130a71ea0fde871f2e275e69a3f5d3cdcd1b21
             return;
         }
     }
@@ -234,7 +225,10 @@ bool_expression :
         ;
 
 assignment : 
-       id IS expression SEMICOLON                    
+       id IS expression SEMICOLON
+       { 
+                isDeclared($1);
+        }                     
        ;
 
 increment :

@@ -32,6 +32,8 @@ fn main() {
 
     resultSum = sum(number);
 
+    a = 8;
+
     resultMulti = multi(number);
 
     if resultMulti < resultSum {
