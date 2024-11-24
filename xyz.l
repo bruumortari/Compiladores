@@ -1,8 +1,8 @@
 /* 
    Linguagem XYZ
 
-   Bruna
-   Larissa
+   Bruna Bertolo Mortari - 11795892
+   Larissa Magalhães Pereira - 13747904
 */
 %{
     #include <stdlib.h>

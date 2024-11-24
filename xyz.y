@@ -1,8 +1,8 @@
 /* 
    Linguagem XYZ
 
-   Bruna
-   Larissa
+   Bruna Bertolo Mortari - 11795892
+   Larissa Magalhães Pereira - 13747904
 */
 %{
 
@@ -40,18 +40,6 @@ void addSymbol(char* name, char* type) {
     }
 }
 
-void checkSymbol() {
-    for (int i = 0; i < symbolCount; i++) {
-        for (int j = i + 1; j < symbolCount; j++) {
-            if (strcmp(symbolTable[i].function, symbolTable[j].function) == 0 &&
-                strcmp(symbolTable[i].name, symbolTable[j].name) == 0) {
-                printf("Erro: A variável '%s' foi declarada mais de uma vez na função '%s'!\n",
-                       symbolTable[i].name, symbolTable[i].function);
-            }
-        }
-    }
-}
-
 // Descreva como checar se uma variável ao ser usada, já foi declarada:
 // A conferência de declaração de variáveis é realizada por meio de uma função (isDeclared) que verifica 
 // se o nome da variável está presente na tabela de símbolos e está associado ao escopo correto (função atual). 
@@ -61,7 +49,7 @@ void checkSymbol() {
 void isDeclared(char* name) {
     for (int i = 0; i < symbolCount; i++) {
         if (strcmp(symbolTable[i].name, name) == 0 &&
-            strcmp(symbolTable[i].function == NULL) == 0) {
+            symbolTable[i].function == NULL) {
             return;
         }
     }
@@ -69,7 +57,6 @@ void isDeclared(char* name) {
 }
 
 void printSymbolTable() {
-    checkSymbol();
     printf("Tabela de Simbolos:\n");
     printf("----------------------------------------\n");
 
