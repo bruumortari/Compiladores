@@ -35,6 +35,7 @@
 "<="                   { return EQL; }
 ">="                   { return EQG; }
 "="                    { return IS; }
+"%"                    { return REST; }
 "&&"                   { return AND; }
 "||"                   { return OR; }
 "=="                   { return EQ; }
@@ -52,6 +53,5 @@
 "-"?[0-9]+(\.[0-9]+)   { yylval.f = atof(yytext); return FLOAT; }
 [ \n\t\r]              {  } 
 "//".*                 {  } 
-"/*"[a-zA-Z0-9\n\t\r_"*"]*"*/"      {  } 
 .                      { yyerror("unknown token %s\n"); }
 %%

@@ -41,12 +41,7 @@ void addSymbol(char* name, char* type) {
     }
 }
 
-// Descreva como checar se uma variável ao ser usada, já foi declarada:
-// A conferência de declaração de variáveis é realizada por meio de uma função (isDeclared) que verifica 
-// se o nome da variável está presente na tabela de símbolos e está associado ao escopo correto (função atual). 
-// Quando uma variável é usada em uma expressão ou atribuição, a função é chamada para garantir que a variável já foi previamente declarada. 
-// Caso a variável não seja encontrada, a função gera um erro, interrompendo a execução do programa. 
-
+// Checa se uma variável ao ser usada, já foi declarada
 void isDeclared(char* name) {
     for (int i = 0; i < symbolCount; i++) {
         if (strcmp(symbolTable[i].name, name) == 0 &&
@@ -54,7 +49,7 @@ void isDeclared(char* name) {
             return;
         }
     }
-    fprintf(stderr, "Erro: Variavel '%s' sem declaracao", name);
+    fprintf(stderr, "Erro: Variavel '%s' sem declaracao\n", name);
 }
 
 void printSymbolTable() {
@@ -86,17 +81,17 @@ extern FILE *yyin;
 %token <type> I64 F64
 %token FUNCTION VAR LBRACE RBRACE LPARENTHESIS RPARENTHESIS
 %token IF ELSE WHILE RETURN
-%token PLUS MINUS MULTI DIV GREATERTHAN LESSTHAN EQL EQG IS DIFF AND OR EQ DIFFERENT INCREMENT DECREMENT NOT
+%token PLUS MINUS MULTI DIV REST GREATERTHAN LESSTHAN EQL EQG IS AND OR EQ DIFFERENT INCREMENT DECREMENT NOT
 %token SEMICOLON COMMA COLON
 
 %type <s> id
 %type <type> type
 
 /* Lista de precedência */
-%left MULTI DIV
+%left MULTI DIV REST
 %left PLUS MINUS
-%nonassoc GREATERTHAN LESSTHAN EQL EQG DIFF
-%nonassoc EQ DIFFERENT AND OR
+%nonassoc EQ DIFFERENT GREATERTHAN LESSTHAN EQL EQG
+%nonassoc AND OR NOT
 
 /* Gramática */
 %%
@@ -130,15 +125,11 @@ function_call :
 
 parameters_call_list :
         epsilon
-        | parameter_call non_empty_parameter_call
-        ;
-
-parameter_call :
-        id
+        | id non_empty_parameter_call
         ; 
 
 non_empty_parameter_call :
-        COMMA parameter_call non_empty_parameter_call
+        COMMA id non_empty_parameter_call
         | epsilon
         ;                       
 
@@ -156,6 +147,7 @@ parameters_list:
 non_empty_parameters:
         epsilon
         | COMMA parameter non_empty_parameters
+        ;
 
 id : 
         IDENTIFIER
@@ -209,7 +201,8 @@ expression :
         | expression MULTI expression           
         | expression DIV expression
         | bool_expression             
-        | LPARENTHESIS expression RPARENTHESIS  
+        | LPARENTHESIS expression RPARENTHESIS
+        | expression REST expression
         ;
 
 bool_expression : 
@@ -218,7 +211,7 @@ bool_expression :
         | expression EQG expression
         | expression LESSTHAN expression
         | expression EQL expression
-        | expression DIFF expression
+        | expression DIFFERENT expression
         | expression AND expression
         | expression OR expression
         | NOT expression
@@ -244,8 +237,8 @@ return_statement :
         ;
 
 if_statement :
-        IF expression LBRACE statements_list RBRACE
-        | IF expression LBRACE statements_list RBRACE ELSE LBRACE statements_list RBRACE
+        IF bool_expression LBRACE statements_list RBRACE
+        | IF bool_expression LBRACE statements_list RBRACE ELSE LBRACE statements_list RBRACE
         ;
 
 loop :
@@ -260,7 +253,8 @@ void yyerror(char *msg) {
 
 int main () {
 
-    FILE* file = fopen("fat.txt", "r"); // Abre o arquivo para leitura
+    // Abre o arquivo para leitura
+    FILE* file = fopen("fat.txt", "r");
 
     if (!file) {
         fprintf(stderr, "Erro ao abrir o arquivo.\n");
